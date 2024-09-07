@@ -5,9 +5,126 @@ presentation:
   theme: night.css
 ---
 
-<!-- slide -->
+
 
 # Node JS, sua primeira API
+
+## Arquitetura projeto explicada
+
+### 1. **server.js**
+
+- Esse é o arquivo principal que inicializa o servidor Express. Ele geralmente faz o seguinte:
+
+- Configura o ExpressJS (instancia o app).
+- Define middlewares globais, como body parsers (para lidar com requisições JSON ou URL-encoded).
+- Importa as rotas a partir da pasta `routes`.
+- Escuta em uma porta específica para começar a aceitar requisições HTTP.
+
+- Exemplo básico do `server.js`:
+
+```js
+
+const express = require('express');
+const app = express();
+const notasRoutes = require('./routes/notasRoutes');
+
+app.use(express.json()); // Middleware para interpretar JSON
+
+app.use('/notas', notasRoutes); // Usa as rotas
+
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});
+
+```
+
+### 2. **Pasta `routes`**
+
+- Aqui ficam os arquivos que definem as rotas da aplicação, ou seja, os endpoints que respondem às requisições HTTP. Essas rotas geralmente chamam métodos do controller.
+
+- Exemplo de um arquivo `routes/notasRoutes.js`:
+
+```js
+
+const express = require('express');
+const router = express.Router();
+const notasController = require('../controller/notasController');
+
+router.get('/', notasController.getTodasNotas);
+router.post('/', notasController.criarNota);
+
+module.exports = router;
+
+```
+
+- Aqui, estamos criando rotas e vinculando as ações ao `notasController`.
+
+### 3. **Pasta `controller`**
+
+- O controller contém a lógica para processar as requisições e determinar o que deve acontecer. Ele coordena entre as rotas e a camada DAO (acesso aos dados).
+
+Exemplo de um arquivo `controller/notasController.js`:
+
+```js
+
+const notasDAO = require('../dao/notasDAO');
+
+exports.getTodasNotas = (req, res) => {
+  const notas = notasDAO.obterTodasNotas();
+  res.json(notas);
+};
+
+exports.criarNota = (req, res) => {
+  const novaNota = req.body;
+  notasDAO.adicionarNota(novaNota);
+  res.status(201).json({ mensagem: 'Nota criada com sucesso!' });
+};
+
+```
+
+- O controller chama o DAO para manipular os dados e retorna as respostas para as rotas.
+
+### 4. **Pasta `dao`**
+
+- DAO (Data Access Object) é a camada que interage diretamente com o banco de dados. Ela contém a lógica de acesso e manipulação dos dados. O DAO geralmente faz consultas, inserções, atualizações e deleções no banco de dados.
+
+- Exemplo de um arquivo `dao/notasDAO.js`:
+
+```js
+
+const database = require('../database/conexao');
+
+exports.obterTodasNotas = () => {
+  return database.getNotas(); // Simulação de um banco de dados em memória
+};
+
+exports.adicionarNota = (nota) => {
+  database.addNota(nota); // Adiciona uma nova nota ao "banco de dados"
+};
+
+```
+
+- O DAO pode interagir com o banco de dados diretamente ou por meio de uma biblioteca, como o `sequelize` ou `mongoose`.
+
+### 5. **Pasta `database`**
+
+- Essa pasta contém a configuração e a conexão com o banco de dados. Dependendo do que você estiver usando (MySQL, MongoDB, etc.), ela contém os scripts de conexão e configuração da base de dados.
+
+Exemplo de um arquivo `database/conexao.js`:
+
+```js
+let notas = [];
+
+exports.getNotas = () => {
+  return notas;
+};
+
+exports.addNota = (nota) => {
+  notas.push(nota);
+};
+
+```
 
 <!-- slide -->
 
