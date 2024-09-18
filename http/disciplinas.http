@@ -1,0 +1,37 @@
+# GET todas as disciplinas com paginação
+GET http://localhost:3001/disciplinas?page=1&limit=10 HTTP/1.1
+
+###
+
+# GET disciplinas por nome com paginação
+GET http://localhost:3001/disciplinas/nome?nome=Matematica&page=1&limit=10 HTTP/1.1
+
+###
+
+# GET disciplina específica por ID
+GET http://localhost:3001/disciplinas/1 HTTP/1.1
+
+###
+
+# POST cria uma nova disciplina
+POST http://localhost:3001/disciplinas HTTP/1.1
+Content-Type: application/json
+
+{
+    "nome": "Nova Disciplina"
+}
+
+###
+
+# PUT atualiza uma disciplina existente por ID
+PUT http://localhost:3001/disciplinas/1 HTTP/1.1
+Content-Type: application/json
+
+{
+    "nome": "Disciplina Atualizada"
+}
+
+###
+
+# DELETE deleta uma disciplina por ID
+DELETE http://localhost:3001/disciplinas/1 HTTP/1.1

@@ -1,0 +1,41 @@
+# GET todos os trabalhos com paginação
+GET http://localhost:3001/trabalhos?page=1&limit=10 HTTP/1.1
+
+###
+
+# GET trabalhos por nome com paginação
+GET http://localhost:3001/trabalhos/nome?nome=ci&page=1&limit=10 HTTP/1.1
+
+###
+
+# GET trabalho específico por ID
+GET http://localhost:3001/trabalhos/1 HTTP/1.1
+
+###
+
+# POST cria um novo trabalho
+POST http://localhost:3001/trabalhos HTTP/1.1
+Content-Type: application/json
+
+{
+    "nome": "Novo Trabalho",
+    "descricao": "Descrição do novo trabalho",
+    "disciplinaId": 1
+}
+
+###
+
+# PUT atualiza um trabalho existente por ID
+PUT http://localhost:3001/trabalhos/1 HTTP/1.1
+Content-Type: application/json
+
+{
+    "nome": "Trabalho Atualizado",
+    "descricao": "Descrição atualizada do trabalho",
+    "disciplinaId": 1
+}
+
+###
+
+# DELETE deleta um trabalho por ID
+DELETE http://localhost:3001/trabalhos/1 HTTP/1.1

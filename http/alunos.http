@@ -1,0 +1,39 @@
+# GET todos os alunos com paginação
+GET http://localhost:3001/alunos?page=1&limit=10 HTTP/1.1
+
+###
+
+# GET alunos por nome com paginação
+GET http://localhost:3001/alunos/nome?nome=Henri&page=1&limit=10 HTTP/1.1
+
+###
+
+# GET aluno específico por ID
+GET http://localhost:3001/alunos/1 HTTP/1.1
+
+###
+
+# POST cria um novo aluno
+POST http://localhost:3001/alunos HTTP/1.1
+Content-Type: application/json
+
+{
+    "nome": "Novo Aluno",
+    "email": "novo.aluno@example.com"
+}
+
+###
+
+# PUT atualiza um aluno existente por ID
+PUT http://localhost:3001/alunos/1 HTTP/1.1
+Content-Type: application/json
+
+{
+    "nome": "Aluno Atualizado",
+    "email": "aluno.atualizado@example.com"
+}
+
+###
+
+# DELETE deleta um aluno por ID
+DELETE http://localhost:3001/alunos/1 HTTP/1.1

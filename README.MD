@@ -9,6 +9,10 @@ presentation:
 
 # Node JS, sua primeira API
 
+## Instalar plugin REST Client
+
+- Pasta projeto http, contem todas as chamadas http disponíveis 
+
 ## Arquitetura projeto explicada
 
 ### 1. **server.js**
@@ -23,19 +27,20 @@ presentation:
 - Exemplo básico do `server.js`:
 
 ```js
+import express from 'express';
 
-const express = require('express');
+import router from './src/routes/index.js';
+
 const app = express();
-const notasRoutes = require('./routes/notasRoutes');
 
-app.use(express.json()); // Middleware para interpretar JSON
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(router);
 
-app.use('/notas', notasRoutes); // Usa as rotas
-
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+app.listen(3001, function c() {
+  console.log('Server is running on port 3001');
 });
+
 
 ```
 
@@ -43,42 +48,120 @@ app.listen(PORT, () => {
 
 - Aqui ficam os arquivos que definem as rotas da aplicação, ou seja, os endpoints que respondem às requisições HTTP. Essas rotas geralmente chamam métodos do controller.
 
-- Exemplo de um arquivo `routes/notasRoutes.js`:
+- Exemplo de um arquivo `routes/alunos.router.js`:
 
 ```js
 
-const express = require('express');
-const router = express.Router();
-const notasController = require('../controller/notasController');
+import { Router } from 'express';
 
-router.get('/', notasController.getTodasNotas);
-router.post('/', notasController.criarNota);
+import { 
+  getAlunos,
+  getAlunosByNome,
+  getAlunoById,
+  postAluno,
+  putAluno,
+  deleteAlunoById
+} from '../controllers/alunos.controller.js';
 
-module.exports = router;
+const router = Router();
+
+// Rota para listar todos os alunos com paginação e trabalhos relacionados
+router.get('/alunos', getAlunos);
+
+// Rota para buscar alunos por nome com paginação e trabalhos relacionados
+router.get('/alunos/nome', getAlunosByNome);
+
+// Rota para buscar um aluno específico por ID com trabalhos relacionados
+router.get('/alunos/:id', getAlunoById);
+
+// Rota para criar um novo aluno
+router.post('/alunos', postAluno);
+
+// Rota para atualizar um aluno específico por ID
+router.put('/alunos/:id', putAluno);
+
+// Rota para deletar um aluno específico por ID
+router.delete('/alunos/:id', deleteAlunoById);
+
+export default router;
 
 ```
 
-- Aqui, estamos criando rotas e vinculando as ações ao `notasController`.
+- Aqui, estamos criando rotas e vinculando as ações ao `alunosController`.
 
 ### 3. **Pasta `controller`**
 
 - O controller contém a lógica para processar as requisições e determinar o que deve acontecer. Ele coordena entre as rotas e a camada DAO (acesso aos dados).
 
-Exemplo de um arquivo `controller/notasController.js`:
+Exemplo de um arquivo `controller/alunos.controller.js`:
 
 ```js
+import { 
+  selectAlunos,
+  selectAlunosByNome,
+  selectAlunosById,
+  insertAluno,
+  updateAluno,
+  deleteAluno
+} from '../dao/alunos.dao.js';
 
-const notasDAO = require('../dao/notasDAO');
+// CRUD = Create, Read, Update, Delete
 
-exports.getTodasNotas = (req, res) => {
-  const notas = notasDAO.obterTodasNotas();
-  res.json(notas);
+// Retorna todos os alunos com seus trabalhos relacionados, com paginação
+export const getAlunos = async (request, response) => {
+  const page = request.query.page || 1;
+  const limit = request.query.limit || 10;
+
+  const alunos = await selectAlunos(page, limit);
+
+  response.status(200).json(alunos);
 };
 
-exports.criarNota = (req, res) => {
-  const novaNota = req.body;
-  notasDAO.adicionarNota(novaNota);
-  res.status(201).json({ mensagem: 'Nota criada com sucesso!' });
+// Retorna alunos por nome com seus trabalhos relacionados, com paginação
+export const getAlunosByNome = async (request, response) => {
+  const page = request.query.page || 1;
+  const limit = request.query.limit || 10;
+  const nome = request.query.nome || '';
+
+  const alunos = await selectAlunosByNome(nome, page, limit);
+
+  response.status(200).json(alunos);
+};
+
+// Retorna um aluno específico por ID com seus trabalhos relacionados
+export const getAlunoById = async (request, response) => {
+  const id = request.params.id;
+  const aluno = await selectAlunosById(id);
+
+  response.status(200).json(aluno);
+};
+
+// Cria um novo aluno
+export const postAluno = async (request, response) => {
+  const aluno = request.body;
+
+  await insertAluno(aluno);
+
+  response.status(201).json(aluno); // Código 201 para criação bem-sucedida
+};
+
+// Atualiza um aluno existente por ID
+export const putAluno = async (request, response) => { 
+  const id = request.params.id;
+  const aluno = request.body;
+
+  await updateAluno(id, aluno);
+
+  response.status(200).json(aluno);
+};
+
+// Deleta um aluno por ID
+export const deleteAlunoById = async (request, response) => {
+  const id = request.params.id;
+
+  await deleteAluno(id);
+
+  response.status(200).json({ message: `Aluno ${id} deletado com sucesso` });
 };
 
 ```
@@ -89,42 +172,175 @@ exports.criarNota = (req, res) => {
 
 - DAO (Data Access Object) é a camada que interage diretamente com o banco de dados. Ela contém a lógica de acesso e manipulação dos dados. O DAO geralmente faz consultas, inserções, atualizações e deleções no banco de dados.
 
-- Exemplo de um arquivo `dao/notasDAO.js`:
+- Exemplo de um arquivo `dao/alunos.dao.js`:
 
 ```js
+import db from '../database/db.js';
 
-const database = require('../database/conexao');
+// Seleciona todos os alunos com seus trabalhos relacionados, usando paginação
+export const selectAlunos = async (page, limit) => {
+  const offset = (page - 1) * limit;
+  const result = await db.query`
+    SELECT A.ID, A.Nome, A.Email, T.ID AS TrabalhoID, T.Nome AS TrabalhoNome 
+    FROM Alunos A
+    LEFT JOIN Alunos_Trabalhos TA ON A.ID = TA.AlunoID
+    LEFT JOIN Trabalhos T ON TA.TrabalhoID = T.ID
+    ORDER BY A.ID OFFSET ${Number(offset)} ROWS 
+    FETCH NEXT ${Number(limit)} ROWS ONLY`;
 
-exports.obterTodasNotas = () => {
-  return database.getNotas(); // Simulação de um banco de dados em memória
+  // Transformar o resultado em uma estrutura de alunos com seus trabalhos
+  const alunosMap = new Map();
+  
+  result.recordset.forEach(row => {
+    const aluno = alunosMap.get(row.ID) || {
+      id: row.ID,
+      nome: row.Nome,
+      email: row.Email,
+      trabalhos: []
+    };
+    
+    if (row.TrabalhoID) {
+      aluno.trabalhos.push({
+        id: row.TrabalhoID,
+        nome: row.TrabalhoNome
+      });
+    }
+    
+    alunosMap.set(row.ID, aluno);
+  });
+
+  return Array.from(alunosMap.values());
 };
 
-exports.adicionarNota = (nota) => {
-  database.addNota(nota); // Adiciona uma nova nota ao "banco de dados"
+// Seleciona alunos por nome e seus trabalhos relacionados, usando paginação
+export const selectAlunosByNome = async (nome, page, limit) => {
+  const offset = (page - 1) * limit;
+  const result = await db.query`
+    SELECT A.ID, A.Nome, A.Email, T.ID AS TrabalhoID, T.Nome AS TrabalhoNome 
+    FROM Alunos A
+    LEFT JOIN Alunos_Trabalhos TA ON A.ID = TA.AlunoID
+    LEFT JOIN Trabalhos T ON TA.TrabalhoID = T.ID
+    WHERE UPPER(A.Nome) LIKE UPPER(${`%${nome}%`})
+    ORDER BY A.ID OFFSET ${Number(offset)} ROWS 
+    FETCH NEXT ${Number(limit)} ROWS ONLY`;
+
+  // Transformar o resultado em uma estrutura de alunos com seus trabalhos
+  const alunosMap = new Map();
+  
+  result.recordset.forEach(row => {
+    const aluno = alunosMap.get(row.ID) || {
+      id: row.ID,
+      nome: row.Nome,
+      email: row.Email,
+      trabalhos: []
+    };
+    
+    if (row.TrabalhoID) {
+      aluno.trabalhos.push({
+        id: row.TrabalhoID,
+        nome: row.TrabalhoNome
+      });
+    }
+    
+    alunosMap.set(row.ID, aluno);
+  });
+
+  return Array.from(alunosMap.values());
+};
+
+// Seleciona um aluno por ID e seus trabalhos relacionados
+export const selectAlunosById = async (id) => {
+  const result = await db.query`
+    SELECT A.ID, A.Nome, A.Email, T.ID AS TrabalhoID, T.Nome AS TrabalhoNome 
+    FROM Alunos A
+    LEFT JOIN Alunos_Trabalhos TA ON A.ID = TA.AlunoID
+    LEFT JOIN Trabalhos T ON TA.TrabalhoID = T.ID
+    WHERE A.ID = ${id}`;
+
+  if (result.recordset.length === 0) {
+    return null; // Aluno não encontrado
+  }
+
+  const aluno = {
+    id: result.recordset[0].ID,
+    nome: result.recordset[0].Nome,
+    email: result.recordset[0].Email,
+    trabalhos: []
+  };
+
+  result.recordset.forEach(row => {
+    if (row.TrabalhoID) {
+      aluno.trabalhos.push({
+        id: row.TrabalhoID,
+        nome: row.TrabalhoNome
+      });
+    }
+  });
+
+  return aluno;
+};
+
+// Insere um novo aluno
+export const insertAluno = async (aluno) => {
+  const result = await db.query`
+    INSERT INTO Alunos (ID, Nome, Email) VALUES (${aluno.nome}, ${aluno.email})
+  `;
+  return result.recordset;
+};
+
+// Atualiza um aluno existente
+export const updateAluno = async (id, aluno) => {
+  const result = await db.query`
+    UPDATE Alunos SET Nome = ${aluno.nome}, Email = ${aluno.email} WHERE ID = ${id}
+  `;
+
+  return result.recordset;
+};
+
+// Deleta um aluno por ID
+export const deleteAluno = async (id) => {
+  const result = await db.query`
+    DELETE FROM Alunos WHERE ID = ${id}
+  `;
+
+  return result.recordset;
 };
 
 ```
 
-- O DAO pode interagir com o banco de dados diretamente ou por meio de uma biblioteca, como o `sequelize` ou `mongoose`.
+- O DAO pode interagir com o banco de dados diretamente ou por meio de uma biblioteca, como o `sequelize` ou `mongoose`, mas nesse caso estamos utilizando o driver do mssql.
 
 ### 5. **Pasta `database`**
 
-- Essa pasta contém a configuração e a conexão com o banco de dados. Dependendo do que você estiver usando (MySQL, MongoDB, etc.), ela contém os scripts de conexão e configuração da base de dados.
+- Essa pasta contém a configuração e a conexão com o banco de dados. Dependendo do que você estiver usando (MySQL, MongoDB, MSSQL, etc.), ela contém os scripts de conexão e configuração da base de dados.
 
-Exemplo de um arquivo `database/conexao.js`:
+Exemplo de um arquivo `database/db.js`:
 
 ```js
-let notas = [];
+import sql from 'mssql';
 
-exports.getNotas = () => {
-  return notas;
-};
+const config = {
+  user: "", // Database username
+  password: "", // Database password
+  server: "", // Server IP address
+  database: "", // Database name
+  options: {
+    encrypt: false, 
+  },
+}
 
-exports.addNota = (nota) => {
-  notas.push(nota);
-};
+const db = sql.connect(config, (error) => {
+  if (error) {
+    throw error;
+  }
+
+  console.log('Conectado ao banco de dados');
+});
+
+export default db;
 
 ```
+<!-- slide -->
 
 <!-- slide -->
 

@@ -1,0 +1,55 @@
+# GET todas as notas com paginação
+GET http://localhost:3001/notas?page=1&limit=10 HTTP/1.1
+
+###
+
+# GET notas por aluno com paginação
+GET http://localhost:3001/notas/aluno?alunoId=1&page=1&limit=10 HTTP/1.1
+
+###
+
+# GET notas por disciplina com paginação
+GET http://localhost:3001/notas/disciplina?disciplinaId=1&page=1&limit=10 HTTP/1.1
+
+###
+
+# GET notas por professor com paginação
+GET http://localhost:3001/notas/professor?professorId=1&page=1&limit=10 HTTP/1.1
+
+###
+
+# GET nota específica por ID
+GET http://localhost:3001/notas/1 HTTP/1.1
+
+###
+
+# POST cria uma nova nota
+POST http://localhost:3001/notas HTTP/1.1
+Content-Type: application/json
+
+{
+    "alunoId": 1,
+    "disciplinaId": 1,
+    "professorId": 1,
+    "bimestre": 1,
+    "nota": 9.5
+}
+
+###
+
+# PUT atualiza uma nota existente por ID
+PUT http://localhost:3001/notas/1 HTTP/1.1
+Content-Type: application/json
+
+{
+    "alunoId": 1,
+    "disciplinaId": 1,
+    "professorId": 1,
+    "bimestre": 1,
+    "nota": 10
+}
+
+###
+
+# DELETE deleta uma nota por ID
+DELETE http://localhost:3001/notas/1 HTTP/1.1

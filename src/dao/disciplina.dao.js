@@ -28,8 +28,8 @@ export const selectDisciplinasByNome = async (nome, page, limit) => {
 // Insere uma nova disciplina
 export const insertDisciplina = async (disciplina) => {
   const result = await db.query`
-    INSERT INTO Disciplinas (Nome, ProfessorID) 
-    VALUES (${disciplina.nome}, ${disciplina.professorId})
+    INSERT INTO Disciplinas (Nome) 
+    VALUES (${disciplina.nome})
   `;
   
   return result.recordset;
@@ -39,7 +39,7 @@ export const insertDisciplina = async (disciplina) => {
 export const updateDisciplina = async (id, disciplina) => {
   const result = await db.query`
     UPDATE Disciplinas 
-    SET Nome = ${disciplina.nome}, ProfessorID = ${disciplina.professorId} 
+    SET Nome = ${disciplina.nome} 
     WHERE ID = ${id}
   `;
   

@@ -1,0 +1,39 @@
+# GET todos os professores com paginação
+GET http://localhost:3001/professores?page=1&limit=100 HTTP/1.1
+
+###
+
+# GET professores por nome com paginação
+GET http://localhost:3001/professores/nome?nome=Joao&page=1&limit=10 HTTP/1.1
+
+###
+
+# GET professor específico por ID
+GET http://localhost:3001/professores/1 HTTP/1.1
+
+###
+
+# POST cria um novo professor
+POST http://localhost:3001/professores HTTP/1.1
+Content-Type: application/json
+
+{
+    "nome": "Novo Professor",
+    "email": "novo.professor@example.com"
+}
+
+###
+
+# PUT atualiza um professor existente por ID
+PUT http://localhost:3001/professores/1 HTTP/1.1
+Content-Type: application/json
+
+{
+    "nome": "Professor Atualizado",
+    "email": "professor.atualizado@example.com"
+}
+
+###
+
+# DELETE deleta um professor por ID
+DELETE http://localhost:3001/professores/17 HTTP/1.1
